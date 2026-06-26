@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="카페 창업 비용, 월매출, 손익분기점, 운영자금 생존기간을 계산하는 카페 창업 생존 시뮬레이터">
+  <meta name="author" content="1985커피 로스터현">
+  <title>카페 창업 생존 시뮬레이터 | 로스터현</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="site-header">
+    <div>
+      <p class="brand">CAFE SURVIVAL LAB</p>
+      <h1>카페 창업 생존 시뮬레이터</h1>
+      <p class="subtitle">제작: 로스터현 v1.0 Web</p>
+    </div>
+    <div class="header-actions">
+      <a class="talk-button" href="https://talk.naver.com/ct/wcbwvv" target="_blank" rel="noopener noreferrer">톡톡문의</a>
+      <button id="reset-button" class="ghost-button" type="button">초기화</button>
+      <label class="ghost-button file-button">
+        불러오기
+        <input id="load-file" type="file" accept="application/json,.json">
+      </label>
+      <button id="save-button" class="primary-button" type="button">저장</button>
+    </div>
+  </header>
+
+  <main class="app-shell">
+    <aside class="input-panel" aria-labelledby="input-title">
+      <div class="panel-heading">
+        <div>
+          <p class="eyebrow">BUSINESS CONDITIONS</p>
+          <h2 id="input-title">사업 조건 입력</h2>
+        </div>
+        <span>자동 계산</span>
+      </div>
+
+      <section class="preset-card" aria-labelledby="preset-title">
+        <h3 id="preset-title">예시 불러오기</h3>
+        <div class="preset-grid">
+          <button type="button" data-preset="1인 개인카페">1인 개인카페</button>
+          <button type="button" data-preset="일반 개인카페">일반 개인카페</button>
+          <button type="button" data-preset="저가 프랜차이즈">저가 프랜차이즈</button>
+        </div>
+      </section>
+
+      <form id="simulator-form" autocomplete="off"></form>
+    </aside>
+
+    <section class="dashboard" aria-labelledby="dashboard-title">
+      <div class="dashboard-top">
+        <div>
+          <p class="eyebrow">SURVIVAL DASHBOARD</p>
+          <h2 id="dashboard-title">생존 분석 대시보드</h2>
+          <p id="summary-text" class="summary-text">입력값을 기준으로 매장의 자금 흐름을 분석합니다.</p>
+        </div>
+        <strong id="status-badge" class="status-badge">분석 중</strong>
+      </div>
+
+      <div class="metric-grid" aria-live="polite">
+        <article class="metric-card">
+          <span>예상 월매출</span>
+          <strong id="metric-revenue">-</strong>
+          <small id="metric-revenue-sub"></small>
+        </article>
+        <article class="metric-card">
+          <span>월 영업이익</span>
+          <strong id="metric-profit">-</strong>
+          <small id="metric-profit-sub"></small>
+        </article>
+        <article class="metric-card">
+          <span>손익분기 매출</span>
+          <strong id="metric-bep">-</strong>
+          <small id="metric-bep-sub"></small>
+        </article>
+        <article class="metric-card">
+          <span>운영자금 생존기간</span>
+          <strong id="metric-survival">-</strong>
+          <small id="metric-survival-sub"></small>
+        </article>
+      </div>
+
+      <div class="tabs" role="tablist" aria-label="분석 탭">
+        <button class="active" type="button" role="tab" aria-selected="true" data-tab="cashflow">현금흐름</button>
+        <button type="button" role="tab" aria-selected="false" data-tab="scenarios">시나리오 비교</button>
+        <button type="button" role="tab" aria-selected="false" data-tab="diagnosis">위험 진단</button>
+      </div>
+
+      <section id="tab-cashflow" class="tab-panel active" role="tabpanel">
+        <div class="detail-grid">
+          <article>
+            <span>오픈 후 남는 운영자금</span>
+            <strong id="reserve-info">-</strong>
+          </article>
+          <article>
+            <span>하루 손익분기 고객</span>
+            <strong id="bep-info">-</strong>
+          </article>
+        </div>
+        <div class="chart-heading">
+          <h3>24개월 예상 현금흐름</h3>
+          <span>보증금 회수·세금·추가 투자 제외</span>
+        </div>
+        <div class="chart-wrap">
+          <canvas id="cashflow-chart" aria-label="24개월 예상 현금흐름 차트"></canvas>
+        </div>
+      </section>
+
+      <section id="tab-scenarios" class="tab-panel" role="tabpanel" hidden>
+        <div class="section-title">
+          <h3>고객 수와 원가 상승에 따른 생존성 비교</h3>
+          <p>낙관 120% · 기준 100% · 보수 75% · 위기 55%의 예상 고객을 적용합니다.</p>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>구분</th>
+                <th>월매출</th>
+                <th>월 영업이익</th>
+                <th>이익률</th>
+                <th>하루 고객</th>
+                <th>생존기간</th>
+              </tr>
+            </thead>
+            <tbody id="scenario-body"></tbody>
+          </table>
+        </div>
+        <p id="scenario-note" class="note-box"></p>
+      </section>
+
+      <section id="tab-diagnosis" class="tab-panel" role="tabpanel" hidden>
+        <div class="grade-box">
+          <strong id="grade-label">-</strong>
+          <div>
+            <h3 id="grade-title">분석 전</h3>
+            <p id="grade-desc">사업 조건을 입력하면 위험요인을 분석합니다.</p>
+          </div>
+        </div>
+        <h3 class="risk-heading">점검이 필요한 항목</h3>
+        <div id="risk-list" class="risk-list"></div>
+        <p class="disclaimer">※ 본 결과는 입력값에 따른 단순 추정치이며 세금, 감가상각, 부가세, 계절성 등은 별도로 검토해야 합니다.</p>
+      </section>
+    </section>
+  </main>
+
+  <footer>
+    <p>카페 창업과 운영 판단을 돕기 위한 참고용 계산 도구입니다.</p>
+    <p>프로그램의 모든 지식 재산권은 1985커피 '로스터현'에 있습니다.</p>
+  </footer>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script src="app.js"></script>
+</body>
+</html>
